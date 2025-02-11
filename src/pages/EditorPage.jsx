@@ -51,11 +51,13 @@ const EditorPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [output, setOutput] = useState('');
+  const [load,setLoad] = useState(false);
   let lan = languages.find((langu) => langu.languageName === language);
   lan = lan || {};
   codeRef.current = templates[lan.languageId] || ''; // Default to the selected language template.
 
   useEffect(() => {
+    setLoad(true);
     const init = async () => {
       socketRef.current = await initSocket();
       socketRef.current.on('connect_error', handleErrors);
@@ -84,6 +86,8 @@ const EditorPage = () => {
         toast.success(`${username} left the room.`);
         setClients((prev) => prev.filter((client) => client.socketId !== socketId));
       });
+      setLoad(false);
+      
     };
 
     init();
@@ -110,6 +114,7 @@ const EditorPage = () => {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       data,
     };
+   
 
     axios(config)
       .then((response) => {
@@ -138,6 +143,16 @@ const EditorPage = () => {
     window.location.reload();
 };
 
+if (load) {
+  return (
+    <div className="flex justify-center items-center h-screen w-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
+    </div>
+  );
+}
+
+
+
   return (
     <div className="flex overflow-hidden h-screen">
       <div className="w-[30%] md:w-[20%] py-10 px-2 flex flex-col justify-between border-r-2 border-r-white">
@@ -145,9 +160,12 @@ const EditorPage = () => {
           <h2 className="font-semibold text-lg md:text-xl">Collaboration Editor</h2>
           <h3 className="my-10 font-semibold">Connected</h3>
           <div className="flex gap-2 flex-wrap">
-            {clients.map((client) => (
+            {clients.length>0 ?clients.map((client) => (
               <Client userName={client.username} key={client.socketId} />
-            ))}
+            ))
+          : <div className="flex justify-center items-center h-screen w-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
+        </div>}
           </div>
         </div>
         <div className="flex flex-col gap-5">
